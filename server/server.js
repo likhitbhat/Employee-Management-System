@@ -13,9 +13,21 @@ const app = express();
 
 // Security middleware
 app.use(helmet());
-app.use(cors({ 
-  origin: process.env.CLIENT_URL || 'http://localhost:5173', 
-  credentials: true 
+
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:3000',
+  process.env.CLIENT_URL,
+].filter(Boolean);
+
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow requests with no origin (e.g., mobile apps, Postman)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error(`CORS policy: Origin ${origin} not allowed`));
+  },
+  credentials: true
 }));
 // Temporarily disabled due to Express 5 compatibility issue with req.query getter
 // app.use(mongoSanitize());
